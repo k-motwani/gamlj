@@ -8,7 +8,6 @@ mod<-gamlj::gamljGlmMixed(
   correlatedEffects = "nocorr",
   cimethod = "wald")
 
-
 val1<-round(as.numeric(as.character(mod$info$asDF$value[6])),digits = 3)
 val2<-round(as.numeric(as.character(mod$info$asDF$value[9])),digits = 3)
 val3<-as.character(mod$info$asDF$value[14])
