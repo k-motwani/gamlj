@@ -185,7 +185,9 @@ gamljGlmMixed <- function(
   
   if ( ! requireNamespace('jmvcore'))
     stop('gamljGlmMixed requires jmvcore to be installed (restart may be required)')
-  
+
+  test<-withCallingHandlers({
+    
   if ( ! missing(formula)) {
     if (missing(dep))
       dep <- gamljGlmMixedClass$private_methods$.marshalFormula(
@@ -218,7 +220,7 @@ gamljGlmMixed <- function(
         data=`if`( ! missing(data), data, NULL),
         name="modelTerms")
   }
-  
+  }, error=function(e) stop("The formula cannot be processed"))
   if ( ! missing(dep)) dep <- jmvcore::resolveQuo(jmvcore::enquo(dep))
   if ( ! missing(factors)) factors <- jmvcore::resolveQuo(jmvcore::enquo(factors))
   if ( ! missing(covs)) covs <- jmvcore::resolveQuo(jmvcore::enquo(covs))

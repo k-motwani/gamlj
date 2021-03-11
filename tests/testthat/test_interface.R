@@ -145,6 +145,7 @@ testthat::test_that("plot ok",
   testthat::expect_true(ggplot2::is.ggplot(mplot))
 )
 library(gamlj)
+data("wicksell")
 wicksell$time<-factor(wicksell$time)
 wicksell$group<-factor(wicksell$group)
 

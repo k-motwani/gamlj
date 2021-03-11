@@ -97,13 +97,6 @@ datasets:
     tags:
       - Poisson
       - GzLM
-  - name: temptime
-    path: temptime.csv
-    description: |
-      Simulated data for individual growth models.
-    tags:
-      - Mixed models
-      - Individual growth model
   - name: schoolexam
     path: schoolexam.csv
     description: |

@@ -143,7 +143,8 @@ gamljGzlm <- function(
   
   if ( ! requireNamespace('jmvcore'))
     stop('gamljGzlm requires jmvcore to be installed (restart may be required)')
-  
+
+  test<-withCallingHandlers({
   if ( ! missing(formula)) {
     if (missing(dep))
       dep <- jmvcore::marshalFormula(
@@ -173,6 +174,8 @@ gamljGzlm <- function(
         from='rhs',
         type='terms')
   }
+  }, error=function(e) stop("The formula cannot be processed"))
+  
   
   if ( ! missing(dep)) dep <- jmvcore::resolveQuo(jmvcore::enquo(dep))
   if ( ! missing(factors)) factors <- jmvcore::resolveQuo(jmvcore::enquo(factors))

@@ -311,7 +311,7 @@ gplots.initPlots=function(obj,data,cov_condition) {
 #### the legend name and the function assumes that the data contains "lwr" and "upr" varianbles
 #### "theme" is passed from jmv plot function
 
-gplots.twoWaysPlot<-function(image,theme,depName,groupName,linesName,errorType="none",title=NULL,order=1) {
+gplots.twoWaysPlot<-function(image,theme,depName,groupName,linesName,errorType="none",title=NULL,order=1,xscale=NULL) {
   if (errorType != 'none') {
     dodge <- ggplot2::position_dodge(0.2)
     clabel<-paste(linesName, paste0("(",toupper(errorType),")"),sep="\n")
@@ -368,6 +368,8 @@ gplots.twoWaysPlot<-function(image,theme,depName,groupName,linesName,errorType="
       p <- p + ggplot2::geom_ribbon(data=gdata,aes_string(x="group", ymin="lwr", ymax="upr",group="lines",colour="lines",fill = "lines"),linetype = 0,show.legend=F, alpha=.2)          
 
   }
+  
+  
   
   if (!is.null(title))
     p<-p+ ggtitle(title)

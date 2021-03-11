@@ -55,7 +55,9 @@ rawMeans<- function(x,...) UseMethod(".rawMeans")
   interval=as.numeric(interval)/100
   condlist<-cov_conditioning$values(nterms)
   names(condlist)<-jmvcore::toB64(names(condlist))
-  est<-emmeans::emmeans(model,specs=terms,at=condlist,type=type,lmer.df = df,nesting=NULL)
+  suppressMessages({
+      est<-emmeans::emmeans(model,specs=terms,at=condlist,type=type,lmer.df = df,nesting=NULL)
+  })
 #  est<-.fixLabels(as.data.frame(est),terms,cov_conditioning)
   options(warn = oldw)
   est
@@ -160,7 +162,9 @@ pred.simpleEstimates<- function(x,...) UseMethod(".simpleEstimates")
                    unlist(c(variable,moderator,threeway)),
                    cov_conditioning = cov_conditioning,
                    interval=interval)
+                   suppressMessages({
                    est<-emmeans::contrast(emm,method = .internal.emmc,by = preds,data=data,variable=variable)
+                   })
                    ci<-stats::confint(est,level = interval/100)
     
     ####### rename ci variables because emmeans changes them for different models
@@ -180,20 +184,25 @@ pred.simpleEstimates<- function(x,...) UseMethod(".simpleEstimates")
 #    est<-emmeans::emtrends(model,specs=preds,var=variable,at=condlist,options=list(level=lev))
 #    emmeans::emm_options(ref_grid = list(level = .90))
                    args<-list(model,specs=preds,var=variable,at=condlist,options=list(level=lev))
+                   suppressMessages({
                    est<-do.call(emmeans::emtrends,args)
+                   })
                    ci<-as.data.frame(est)
     ####### rename ci variables because emmeans changes them for different models
                    wci<-dim(ci)[2]
                    ci<-ci[,c(wci-1,wci)]
                    names(ci)<-c("lower.CL","upper.CL")  
     ################################
+                   suppressMessages({
                    params<-cbind(emmeans::test(est),ci)
+                   })
                    params<-.fixLabels(params,preds,cov_conditioning)
                    names(params)[1:(length(lnames)+1)]<-c(lnames,"estimate")
     }
   
-
+                   suppressMessages({
                    ff<-emmeans::test(est,joint=T,by=preds)
+                   })
                    ff<-.fixLabels(ff,preds,cov_conditioning)
   ### For some model emmeans returns F with df2=Inf, which means Chi-squared/df. Let's make it explicit
                    if (ff$df2[1]==Inf) {
