@@ -148,7 +148,8 @@ gplots.preparePlotData<- function(x,...) UseMethod(".preparePlotData")
   
   if (is.factor(data[[jmvcore::toB64(groupName)]]))  {
     pdata$group<-factor(pdata$group,levels =levels(data[[jmvcore::toB64(groupName)]]))
-  }
+  } 
+  mark(attr(data[[jmvcore::toB64(groupName)]],"params"))
   if (is.something(linesName) && is.factor(data[[jmvcore::toB64(linesName)]]))  {
     pdata$lines<-factor(pdata$lines,levels =levels(data[[jmvcore::toB64(linesName)]]))
   }

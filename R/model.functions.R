@@ -381,7 +381,6 @@ mf.checkData<-function(options,data,cluster=NULL,modelType="linear") {
        w<-which(scalingVars==cov)
        type<-ifelse(is.something(w),scaling[[w]][['type']],"centered")
        data[[cov64]]<-lf.scaleContinuous(data[[cov64]],type,by=clusterdata)  
-
      }
      # check factors
      factors=options$factors
