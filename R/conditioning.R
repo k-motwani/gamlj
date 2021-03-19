@@ -5,7 +5,7 @@
 # Conditioning of covariates can come in different forms:
 # 1. can be a list of numbers, They are passed as they are as the "at" levels. Each covariate is conditioned to 
 #    those values.
-# 2. named list, each with labels and methods: such as list(x="mean_sd",y="percent")
+# 2. named list, each with labels and methods: such as list(x="mean_sd",z="percent")
 #    the list can be partial, the missing labels are substituted with the values passed.
 # 4. a list of named list, each with labels and values: such as list(x=list("mean-sd"=-10,"mean"=0,"mean+sd"=+10)) 
 # 3. one of conditioning method: mean_sd, percent

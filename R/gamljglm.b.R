@@ -5,17 +5,14 @@ gamljGlmClass <- R6::R6Class(
     .model=NA,
     .names64=NA,
     .cov_condition=conditioning$new(),
+    .variables=NA,
     .postHocRows=NA,
     .init=function() {
       ginfo("init")
+      Sys.setlocale("LC_NUMERIC", "C")
       class(private$.results) <- c('gamlj', class(private$.results))
-      private$.names64<-names64$new()
-      n64<-private$.names64
+
       dep<-self$options$dep
-      modelTerms<-self$options$modelTerms
-      fixedIntercept<-self$options$fixedIntercept
-      factors<-self$options$factors
-      covs<-self$options$covs
       ciWidth<-self$options$paramCIWidth
       
       ### here we initialize the info table ####
@@ -26,107 +23,90 @@ gamljGlmClass <- R6::R6Class(
         return()
       }
       
-      # this allows intercept only model to be passed by syntax interface
-      aOne<-which(unlist(modelTerms)=="1")
-      if (is.something(aOne)) {
-        modelTerms[[aOne]]<-NULL
-        fixedIntercept=TRUE
-      }
 
-      
-      data<-private$.cleandata()
-      
-      
-      modelFormula<-lf.constructFormula(dep,modelTerms,fixedIntercept)
-      dep64<-jmvcore::toB64(dep)
-      modelTerms64<-lapply(modelTerms,jmvcore::toB64)
-      formula64<-as.formula(lf.constructFormula(dep64,modelTerms64,fixedIntercept))
-      
+      #### prepare object variables to gather info about the variables ###
+      variables<-Variables$new(self$options)
+      variables$fillinfo(self$data)
+      data<-variables$getInitData()
+
+      #### fill in InfoTable ####
       infoTable$addRow(rowKey="est",list(info="Estimate",value="Linear model fit by OLS"))
-      infoTable$addRow(rowKey="call",list(info="Call",value=n64$translate(modelFormula)))
+      infoTable$addRow(rowKey="call",list(info="Call",value=variables$formula()))
       infoTable$addRow(rowKey="r2m",list(info="R-squared"))
       infoTable$addRow(rowKey="r2c",list(info="Adj. R-squared"))
+
       ### initialize conditioning of covariates
-      if (is.something(covs)) {
+      if (is.something(self$options$covs)) {
       span<-ifelse(self$options$simpleScale=="mean_sd",self$options$cvalue,self$options$percvalue)
-      private$.cov_condition<-conditioning$new(covs,self$options$simpleScale,span)
+      private$.cov_condition<-conditioning$new(self$options$covs,self$options$simpleScale,span)
       }
       #####################
 
 
       ## anova Table 
       aTable<- self$results$main$anova
-      if (length(modelTerms)>0) {
+      anovaTerms<-variables$anovaTerms()
+      if (length(anovaTerms)>0) {
           aTable$addRow(rowKey=1, list(name="Model"))
-          mynames64<-attr(terms(as.formula(formula64)),"term.labels")
-          aterms<-n64$nicenames(mynames64)  
-          for (i in seq_along(modelTerms)) {
-                  lab<-jmvcore::stringifyTerm(aterms[[i]],raise=T)
-                  aTable$addRow(rowKey=i+1, list(name=lab))
-          }
+          for (i in seq_along(anovaTerms))
+                  aTable$addRow(rowKey=i+1, list(name=jmvcore::stringifyTerm(anovaTerms[[i]],raise=T)))
+          
          aTable$addRow(rowKey=i+2, list(name="Residuals",f="",p="",etaSq="",etaSqP="",omegaSq="",epsilonSq=""))
          aTable$addRow(rowKey=i+3, list(name="Total",f="",p="",etaSq="",etaSqP="",omegaSq="",epsilonSq=""))
-         
          aTable$addFormat(col=1, rowNo=i+2, format=jmvcore::Cell.BEGIN_END_GROUP)
          aTable$addFormat(col=1, rowNo=2, format=jmvcore::Cell.BEGIN_GROUP)
          
       }
       ### we want to output SS error and total for intercept-only models ######
-      if (length(modelTerms) == 0) {
+      if (length(anovaTerms) == 0) {
         aTable$addRow(rowKey=1, list(name="Residuals",f="",p="",etaSq="",etaSqP="",omegaSq=""))
         aTable$addRow(rowKey=2, list(name="Total",f="",p="",etaSq="",etaSqP="",omegaSq=""))
       }
       ## fixed effects parameters
 
       aTable<-self$results$main$fixed
-      mynames64<-colnames(model.matrix(formula64,data))
-      terms<-n64$nicenames(mynames64)  
-      labels<-n64$nicelabels(mynames64)
+      ### get terms and labels
+      terms<-variables$paramTerms()  
+      labels<-variables$paramLabels()
+      
       aTable$getColumn('cilow')$setSuperTitle(jmvcore::format('{}% Confidence Interval', ciWidth))
       aTable$getColumn('cihig')$setSuperTitle(jmvcore::format('{}% Confidence Interval', ciWidth))
       for(i in seq_along(terms)) 
           aTable$addRow(rowKey=i,list(source=lf.nicifyTerms(terms[[i]]),label=lf.nicifyLabels(labels[[i]])))
 
       ## hide effects labels if no factor is there
-      if (!is.something(factors))
+      if (!is.something(self$options$factors))
          aTable$getColumn('label')$setVisible(FALSE)
         # other inits
       mi.initInterceptInfo(self$options,self$results)
-      mi.initEffectSizeInfo(self$options,self$results,aterms,ciWidth)
-      
+      mi.initEffectSizeInfo(self$options,self$results,anovaTerms,ciWidth)
       gplots.initPlots(self,data,private$.cov_condition)
       gposthoc.init(data,self$options, self$results$postHocs)     
       gmeans.init(data,self$options,self$results$emeansTables,private$.cov_condition)
       gsimple.init(data,self$options,self$results$simpleEffects)
       mi.initContrastCode(data,self$options,self$results,n64)
+      
+      ### save variables info for later ########
+      private$.variables<-variables
+      
     },
     .run=function() {
-      n64<-private$.names64
       ginfo("run")
+      variables<-private$.variables
       ciWidthp<-self$options$paramCIWidth/100
       # collect some option
       dep <- self$options$dep
       if (is.null(dep))
         return()
-      modelTerms<-self$options$modelTerms
-      fixedIntercept<-self$options$fixedIntercept
-      factors <- self$options$factors
-      covs<-self$options$covs
-      
+
       if (self$options$simpleScale=="mean_sd" && self$options$cvalue==0)
           return()
       if (self$options$simpleScale=="percent" && self$options$percvalue==0)
          return()
       ###############
-      # this allows intercept only model to be passed by syntax interfase
-      aOne<-which(unlist(modelTerms)=="1")
-      if (is.something(aOne)) {
-        modelTerms[[aOne]]<-NULL
-        fixedIntercept=TRUE
-      }
-      modelTerms<-lapply(modelTerms,jmvcore::toB64)
-      modelFormula<-lf.constructFormula(jmvcore::toB64(dep),modelTerms,fixedIntercept)
-      if (modelFormula==FALSE)  
+
+      formula64<-variables$formula64()
+      if (formula64==FALSE)  
           return()
       ### collect the tables #######
       infoTable<-self$results$info
@@ -134,13 +114,13 @@ gamljGlmClass <- R6::R6Class(
       anovaTable<-self$results$main$anova
 
 
-      ##### clean the data ####
-      data<-private$.cleandata()
-      data<-mf.checkData(self$options,data)
+      ##### get the clean data ####
+      data<-variables$cleandata(self$data)
+#      data<-mf.checkData(self$options,data)
       if (!is.data.frame(data))
         jmvcore::reject(data)
-
-      if (!is.null(covs)) {
+      ## this is for conditioning #####
+      if (!is.null(self$options$covs)) {
         names(data)<-jmvcore::fromB64(names(data))
         private$.cov_condition$storeValues(data)
         names(data)<-jmvcore::toB64(names(data))
@@ -152,7 +132,7 @@ gamljGlmClass <- R6::R6Class(
       ##### model ####
       ## for some reason the lm model is very heavy to save in table$state
       ## so we estimate it every time
-      model<- try(private$.estimate(modelFormula, data=data))
+      model<- try(private$.estimate(formula64, data=data))
       mi.check_estimation(model,n64)
       model<-mi.model_check(model)
       private$.model <- model
@@ -164,20 +144,17 @@ gamljGlmClass <- R6::R6Class(
       ### coefficients summary results ####
                parameters<-try(parameters<-mf.summary(model))
                mi.check_estimation(parameters,n64)
-
+               #### computes the betas ####
                if ("beta" %in% self$options$effectSize) {
                          ginfo("computing betas...")
-                        zdata<-data
-                        zdata[[jmvcore::toB64(dep)]]<-scale(zdata[[jmvcore::toB64(dep)]])
-                        for (var in covs)
-                             zdata[[jmvcore::toB64(var)]]<-scale(zdata[[jmvcore::toB64(var)]])
-                         zmodel<-try(stats::lm(modelFormula,data=zdata))
+                         zdata<-variables$standardizedata(data)
+                         zmodel<-try(stats::lm(formula64,data=zdata))
                          warn<-mi.warn_estimation(zmodel,n64)
                          if (is.something(warn)) {
                              attr(parameters,"warning")<-paste0(warn,". Betas cannot be computed.")
                          } else {
                             beta<-coef(zmodel,complete = T)
-                            if (fixedIntercept==TRUE)
+                            if (self$options$fixedIntercept==TRUE)
                                 beta[1]<-0
                             if (any(is.na(beta)))
                               attr(parameters,"warning")<-paste0(warn,"Some betas cannot be computed.")
@@ -190,22 +167,22 @@ gamljGlmClass <- R6::R6Class(
                   #### confidence intervals ######
                   
                   parameters<-mf.confint(model,level=ciWidthp,parameters)
-                  rownames(parameters)<-n64$nicenames(rownames(parameters))
+                  #rownames(parameters)<-variables$nicenames(rownames(parameters))
                   ######  fill the table ########
                   for (i in 1:nrow(parameters)) {
                     tableRow=parameters[i,]
                     estimatesTable$setRow(rowNo=i,tableRow)
                   }
                   
-                   
                estimatesTable$setState(attributes(parameters))
       }
       
       if (is.null(anovaTable$state)) {
-        
+
                ### anova results ####
+               anovaTerms<-variables$anovaTerms()
                anova_res<-data.frame()
-               if (length(modelTerms)==0) {
+               if (length(anovaTerms)==0) {
                    attr(anova_res,"warning")<-"F-Tests cannot be computed"
                } else {
                    suppressWarnings({
@@ -226,12 +203,11 @@ gamljGlmClass <- R6::R6Class(
                infoTable$setRow(rowKey="r2c",list(value=info.r2c))
                infoTable$setState(list(warning=attr(model,"warning")))
                ### end of info table ###
-        
         # anova table ##
                 ### we still need to check for modelTerms, because it may be a intercept only model, where no F is computed
-                 if (length(modelTerms)>0) {
+                 labels<-anovaTerms
+                 if (length(labels)>0) {
                        rawlabels<-names(anova_res)
-                       labels<-n64$nicenames(rawlabels)
                        trows<-dim(anova_res)[1]-1
                        for (i in seq_along(anova_res)) {
                               tableRow<-anova_res[[i]]  
@@ -242,14 +218,14 @@ gamljGlmClass <- R6::R6Class(
  
                  }
                ### we want to output the error SS for intercept only model
-               if (length(modelTerms)==0 & fixedIntercept==TRUE) {
+               if (length(anovaTerms)==0 & self$options$fixedIntercept==TRUE) {
                  ss<-var(model$residuals)*(model$df.residual)
                  anovaTable$setRow(rowKey=1,list("ss"=ss,df=model$df.residual,f="",p="",etaSq="",etaSqP="",omegaSq="",epsilonSq=""))
                  anovaTable$setRow(rowKey=2, list("ss"=ss,df=model$df.residual,p="",etaSq="",etaSqP="",omegaSq="",epsilonSq=""))
                }                 
                
                ### we want to output the error SS for zero only model
-               if (length(modelTerms)==0 & fixedIntercept==FALSE) {
+               if (length(anovaTerms)==0 & self$options$fixedIntercept==FALSE) {
                  ss<-sum(data[[jmvcore::toB64(dep)]]^2)
                  df<-dim(data)[1]
                  anovaTable$setRow(rowKey=1,list("ss"=ss,df=df,f="",p="",etaSq="",etaSqP="",omegaSq="",epsilonSq=""))
@@ -282,7 +258,6 @@ gamljGlmClass <- R6::R6Class(
         
     },
   .cleandata=function() {
-      Sys.setlocale("LC_NUMERIC", "C")
       n64<-private$.names64
       dep <- self$options$dep
       factors <- self$options$factors
@@ -330,8 +305,8 @@ gamljGlmClass <- R6::R6Class(
     .estimate = function(form, data) {
       model<-stats::lm(form, data=data)
       attr(model,"refit")<-list(command="lm",
-                                coptions=list(formula=private$.names64$translate(form)),
-                                eoptions=list(formula=private$.names64$translate(form)))
+                                coptions=list(formula=private$.variables$formula()),
+                                eoptions=list(formula=private$.variables$formula))
       
       model
     },

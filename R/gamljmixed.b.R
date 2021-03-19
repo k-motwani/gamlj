@@ -52,13 +52,11 @@ gamljMixedClass <- R6::R6Class(
       
       if (getout) 
         return(FALSE)
-
-      data<-private$.cleandata()
       
+      data<-private$.cleandata()
+
       ### initialize conditioning of covariates
       if (is.something(self$options$covs)) {
-        
-        mark(mean(data[[]]))
       span<-ifelse(self$options$simpleScale=="mean_sd",self$options$cvalue,self$options$percvalue)
       private$.cov_condition<-conditioning$new(self$options$covs,self$options$simpleScale,span)
       }

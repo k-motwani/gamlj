@@ -37,6 +37,7 @@ options(digits=3)
 library(gamlj)
 ```
 
+
 # Linear models in GAMLj
 
 In this example we run a moderated regression analysis with simple slopes analysis and simple slopes graphs. Data are from   [Cohen et al 2003](http://psycnet.apa.org/record/2002-18109-000) and can be downloaded  [here](https://github.com/mcfanda/gamlj_docs/blob/master/data/exercise.csv). 
@@ -66,6 +67,7 @@ GAMLj GML function minimum setup only requires to specify the formula of the mod
 ```{r warning=FALSE, message=FALSE}
 mod1<-gamljGlm(formula = yendu~xage+zexer, data=data)
 mod1
+
 ```
 
 
@@ -119,7 +121,7 @@ One can also report the betas ($\beta$). The estimates of the betas are correct 
 
 ## Simple Slopes
 
-We can now probe the interaction. One can re-run the model adding the appropriate options to ask for simple effects or one can use the `simpleffects()` function, which is a convenience function to add simple effects to a pre-existing model. The function  `simpleffects()`, however, only returns the simple effects tables, not the full model.
+We can now probe the interaction. One can re-run the model adding the appropriate options to ask for simple effects or one can use the `simpleffects()` function, which is a convenience function to add simple effects to a pre-existing model. The function  `simpleffects()`, however, only returns the simple effects tables, not the full model. `simpleEffects()` accepts the same options as the `gamlj` function it applies on, with the addition of the formula (right hand sided) interface to declare the terms one wants to test.
 
 
 
@@ -129,7 +131,11 @@ We can now probe the interaction. One can re-run the model adding the appropriat
 #               simpleVariable = "xage",
 #               simpleModerator = "zexer")
 ### equivalent results :
-simpleEffects(mod3,variable = "xage",moderator = "zexer")
+
+#simpleEffects(mod3,simpleVariable = "xage",simpleModerator = "zexer")
+
+simpleEffects(mod3,formula=~xage:zexer)
+
 ```
 
 In this way we obtain the effect of age computed for high exercise (`zexer` centered to 1 SD above average), the main effect of age (`zexer` centered to its mean) and the effect of age computed for low exercise (`zexer` centered to -1 SD above average). `gamlGLM()` produces both the F-tests and the parameter estimates for the simple slopes. We focus on the latter table now.
@@ -138,7 +144,7 @@ In this way we obtain the effect of age computed for high exercise (`zexer` cent
 One can change the conditioning levels of the moderators with the `simpleScale` option (default is `mean_sd` for mean plus/minus one SD), either added to the `gamljGlm()` function or to the `simpleEffects()` function. If one wants to use the percentiles (25%,50%,75%), for instance, one can run the following.
 
 ```{r warning=FALSE, message=FALSE}
-simpleEffects(mod3,variable = "xage",moderator = "zexer",simpleScale="percent")
+simpleEffects(mod3,formula=~xage:zexer ,simpleScale="percent")
 ```
 
 The simple effects are now changed, because they are estimated for a different set of values of the moderator.
@@ -146,7 +152,7 @@ The simple effects are now changed, because they are estimated for a different s
 One can further tweak the appearance of the tables by selecting a different value/labels  in `simpleScaleLabels` option. Options are "labels", "values" and "values_labels". The latter outputs the values and the labels of the conditioning values.
 
 ```{r warning=FALSE, message=FALSE}
-simpleEffects(mod3,variable = "xage",moderator = "zexer",
+simpleEffects(mod3, formula=~xage:zexer,
                     simpleScale="percent", 
                     simpleScaleLabels="values_labels")
 ```
@@ -164,6 +170,8 @@ The options needed in `gamljGlm()` are `plotHAxis` for the x-axis variable and  
 ```{r warning=FALSE, message=FALSE}
 mod4<-gamljGlm(formula = yendu~xage*zexer, data=data, 
                plotHAxis = "xage",plotSepLines = "zexer",plotError = "ci")
+
+
 plot(mod4)
 ```
 

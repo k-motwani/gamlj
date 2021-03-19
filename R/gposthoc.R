@@ -12,7 +12,6 @@ gposthoc.init=function(data,options,tables) {
   if ("modelSelection" %in% names(options))
     modelType<-options$modelSelection
   
-  
   bsLevels <- list()
   for (i in seq_along(bs))
     bsLevels[[bs[i]]] <- levels(data[[jmvcore::toB64(bs[i])]])
@@ -85,7 +84,7 @@ gposthoc.populate<-function(model,options,tables) {
   postHocRows <- list()
 
   for (ph in terms) {
-    
+        
     table <- tables$get(key=ph)
     table$setState(list(1:10))
     term <- jmvcore::composeTerm(ph)
@@ -141,6 +140,12 @@ gposthoc.populate<-function(model,options,tables) {
   #  term<-jmvcore::composeTerm(term)
   termf<-stats::as.formula(paste("~",term))
   data<-mf.getModelData(model)
+  mark(term)
+  terms<-jmvcore::decomposeTerm(term)
+  test<-(terms %in% names(data))
+  if (!all(test))
+      jmvcore::reject(paste("No variable named", paste(jmvcore::fromB64(terms[!test]),collapse = ","), "in the model"))
+  
   suppressMessages({
              referenceGrid<-emmeans::emmeans(model, termf,type = "response",data=data) 
              terms<-jmvcore::decomposeTerm(term)

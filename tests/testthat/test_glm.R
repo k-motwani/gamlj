@@ -5,7 +5,8 @@ mod<-gamlj::gamljGlm(
   factors = "supp",
   modelTerms = ~ supp,
 )
-
+attributes(mod$model$model[,2])
+mod
 res<-mod$main$fixed$asDF
 params<-res$estimate
 test_that("glm estimates are correct", {
@@ -23,8 +24,8 @@ mod<-gamlj::gamljGlm(
   formula=science~1
 )
 
-test_that("intercept only works",
-          expect_equal(round(mod$main$fixed$asDF[1,2],digits=2),51.85)
+testthat::test_that("intercept only works",
+          testthat::expect_equal(round(mod$main$fixed$asDF[1,2],digits=2),51.85)
           )
 
 mod<-gamlj::gamljGlm(
@@ -203,10 +204,10 @@ testthat::test_that("glm assumptions plot", {
 
 
 mod<-gamlj::gamljGlm(
-  formula = science ~ math + I(math^2),
-  data = data
+  formula = science ~ math + I(math^2)+ses+ses:math,
+  data = hsbdemo
 )
-
+mod
 res<-mod$main$anova$asDF
 
 test_that("glm contrasts", {

@@ -1,5 +1,4 @@
 
-
 ginfo<-function(what=NULL,obj=NULL) {
   if (GAMLj_INFO) {
     if (!is.null(what))

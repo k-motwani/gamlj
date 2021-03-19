@@ -238,10 +238,6 @@ gamljGlm <- function(
   if (is.something(names(contrasts))) 
     contrasts<-lapply(names(contrasts), function(a) list(var=a,type=contrasts[[a]]))
   
-  
-    
-    
-    
     
     options <- gamljGlmOptions$new(
     dep = dep,
