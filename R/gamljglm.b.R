@@ -107,6 +107,7 @@ gamljGlmClass <- R6::R6Class(
       if (is.something(self$options$posthoc)) {
         
         for (i in seq_along(self$options$posthoc)) {
+          mark(estimate_machine$tab_posthoc[[i]])
             term<-self$options$posthoc[[i]]
             aTable<-self$results$posthoc$get(key = term)
             aTable$setTitle(paste0("Post Hoc Comparisons - ", jmvcore::stringifyTerm(term)))
