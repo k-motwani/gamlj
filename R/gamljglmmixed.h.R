@@ -331,7 +331,8 @@ gamljGlmMixedOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Cla
                     "binomial",
                     "poisson",
                     "inverse.gaussian",
-                    "Gamma"),
+                    "Gamma",
+                    "beta.binomial"),
                 default="gaussian")
             private$..custom_link <- jmvcore::OptionList$new(
                 "custom_link",
