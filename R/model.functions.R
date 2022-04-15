@@ -358,10 +358,12 @@ mf.give_family<-function(modelSelection,custom_family=NULL,custom_link=NULL) {
   if (modelSelection=="nb")
     return(list(family="nb",link="log"))
 
-    if (modelSelection=="poiover")
+  if (modelSelection=="poiover")
       return(stats::quasipoisson())
   if (modelSelection=="probit")
     return(stats::binomial("probit"))
+  if (modelSelection=="betabinomial")
+    return(GLMMadaptive::beta.binomial(link = "logit"))
   if (modelSelection=="custom")
     return(do.call(custom_family,list(custom_link)))
   
