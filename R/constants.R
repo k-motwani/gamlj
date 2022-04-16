@@ -16,6 +16,7 @@ DINFO[["gaussian"]]<-c("Gaussian","Normal distribution of residual")
 DINFO[["poisson"]]<-c("Poisson","Model for count data")
 DINFO[["binomial"]]<-c("Binomial","Dichotomous event distribution of y")
 DINFO[["multinomial"]]<-c("Multinomial","Multi-event distribution of y")
+DINFO[["beta.binomial"]]<-c("Beta binomial","Dichotomous event distribution of y for beta-distributed count data")
 DINFO[["nb"]]<-c("Negative binomial","Rare event with overdispersion")
 DINFO[["poiover"]]<-c("Quasi-Poisson","Rare event with overdispersion")
 DINFO[["Gamma"]]<-c("Gamma","Skewed continuous distribution")
@@ -40,12 +41,15 @@ MINFO[["logistic"]]<-list("name"=c("Logistic","Model for binary y"),
 MINFO[["probit"]]<-list("name"=c("Probit","Model for binary y"),
                         "call"="glm",emmeanTitle="Prob.")
 
+
 MINFO[["multinomial"]]<-list("name"=c("Multinomial","Model for categorical y"),
                              "call"="multinom",emmeanTitle="Prob.")
 
 MINFO[["nb"]]<-list("name"=c("Negative binomial","Model for count data"),
                     "call"="glm(er).nb",emmeanTitle="Mean Count")
 
+MINFO[["beta.binomial"]]<-list("name"=c("Beta binomial","Model for beta-distributed count data"),
+                               "call"="GLMMadaptive::beta.binomial",emmeanTitle="Mean Count")
 
 MINFO[["poiover"]]<-list("name"=c("Quasi-Poisson","Model for count data"),
                          "call"="glm",emmeanTitle="Mean Count")
