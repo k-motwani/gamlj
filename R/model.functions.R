@@ -17,6 +17,8 @@
   
   if ("multinom" %in% class(model))
     return("multinomial")
+  if ("beta.binomial" %in% class(model))
+    return("beta.binomial")
   
 }
 
@@ -362,8 +364,8 @@ mf.give_family<-function(modelSelection,custom_family=NULL,custom_link=NULL) {
       return(stats::quasipoisson())
   if (modelSelection=="probit")
     return(stats::binomial("probit"))
-  if (modelSelection=="betabinomial")
-    return(GLMMadaptive::beta.binomial(link = "logit"))
+  #if (modelSelection=="beta.binomial")
+  #  return(GLMMadaptive::beta.binomial(link = "logit"))
   if (modelSelection=="custom")
     return(do.call(custom_family,list(custom_link)))
   
@@ -546,7 +548,7 @@ mf.confint<- function(x,...) UseMethod(".confint")
   cim["lower.ECL"]<-exp(cim["lower.CL"])     
   cim["upper.ECL"]<-exp(cim["upper.CL"])
   .confint.format(cim,parameters)
-
+  
 }
 
 
@@ -594,6 +596,9 @@ mf.setModelCall<- function(x,...) UseMethod(".setModelCall")
 }
 .setModelCall.glmerMod<-function(model,info) 
         .setModelCall.lmerMod(model,info)
+                         
+.setModelCall.betabinomMod<-function(model,info) 
+        .setModelCall.betabinomMod(model,info)
 
 
 
@@ -603,7 +608,7 @@ mf.savePredRes<-function(options,results,model) {
 
         if (options$predicted && results$predicted$isNotFilled()) {
             ginfo("Saving predicted")
-            if ("multinom" %in% class(model))  type="probs" else type="response"
+            if (c("multinom","beta") %in% class(model))  type="probs" else type="response"
             p<-stats::predict(model,type=type)
   # we need the rownames in case there are missing in the datasheet
             pdf <- data.frame(predicted=p, row.names=rownames(mf.getModelData(model)))
